@@ -9,7 +9,7 @@ if (-not (Test-Path $fontDir)) { New-Item -ItemType Directory -Force $fontDir | 
 
 $fonts = @(
     @{ Url = "https://github.com/Instrument/instrument-serif/raw/main/fonts/ttf/InstrumentSerif-Regular.ttf"; Name = "InstrumentSerif-Regular.ttf" },
-    @{ Url = "https://github.com/IBM/plex/raw/master/IBM-Plex-Sans/fonts/complete/ttf/IBMPlexSans-Regular.ttf"; Name = "IBMPlexSans-Regular.ttf" }
+    @{ Url = "https://github.com/IBM/plex/raw/master/packages/plex-sans/fonts/complete/ttf/IBMPlexSans-Regular.ttf"; Name = "IBMPlexSans-Regular.ttf" }
 )
 
 foreach ($f in $fonts) {

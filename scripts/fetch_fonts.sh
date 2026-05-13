@@ -9,7 +9,7 @@ FONT_DIR="$ROOT/Sources/Notari/Resources/Fonts"
 mkdir -p "$FONT_DIR"
 
 INSTRUMENT_SERIF_URL="https://github.com/Instrument/instrument-serif/raw/main/fonts/ttf/InstrumentSerif-Regular.ttf"
-IBM_PLEX_SANS_URL="https://github.com/IBM/plex/raw/master/IBM-Plex-Sans/fonts/complete/ttf/IBMPlexSans-Regular.ttf"
+IBM_PLEX_SANS_URL="https://github.com/IBM/plex/raw/master/packages/plex-sans/fonts/complete/ttf/IBMPlexSans-Regular.ttf"
 
 curl_fetch() {
     local url="$1" dest="$2"
