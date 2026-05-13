@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Theme — [AppName]</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif;
+    background: #efe9dc;
+    background-image:
+      radial-gradient(1200px 700px at 80% -10%, #f4ecd8 0%, transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, #e8dec5 0%, transparent 55%);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body.is-dark {
+    background: #14130f;
+    background-image:
+      radial-gradient(1200px 700px at 80% -10%, #1d1c18 0%, transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, #1a1815 0%, transparent 55%);
+  }
+
+  .canvas {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 60px 24px 80px;
+    gap: 60px;
+  }
+  .stack {
+    display: flex; flex-direction: column; gap: 14px; align-items: center;
+  }
+  .stack-label {
+    font-family: "Instrument Serif", serif;
+    font-size: 22px; line-height: 1; letter-spacing: 0.005em;
+    font-style: italic;
+    color: rgba(31, 27, 22, 0.55);
+    transition: color 240ms ease;
+  }
+  body.is-dark .stack-label { color: rgba(244, 241, 234, 0.5); }
+  .stack-sub {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(31, 27, 22, 0.4); margin-top: -6px;
+    transition: color 240ms ease;
+  }
+  body.is-dark .stack-sub { color: rgba(244, 241, 234, 0.35); }
+
+  /* Title block above the two phones */
+  .heading {
+    position: absolute; top: 28px; left: 0; right: 0;
+    text-align: center;
+    pointer-events: none;
+  }
+  .heading h1 {
+    margin: 0;
+    font-family: "Instrument Serif", serif;
+    font-weight: 400;
+    font-size: 32px;
+    color: #1f1b16;
+    letter-spacing: -0.005em;
+    transition: color 240ms ease;
+  }
+  body.is-dark .heading h1 { color: #f4f1ea; }
+  .heading p {
+    margin: 6px 0 0;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(31, 27, 22, 0.45);
+    transition: color 240ms ease;
+  }
+  body.is-dark .heading p { color: rgba(244, 241, 234, 0.4); }
+  .heading .name {
+    font-style: italic;
+    color: var(--accent, #b499dc);
+  }
+
+  @media (max-width: 920px) {
+    .canvas { flex-direction: column; gap: 40px; padding: 100px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="heading">
+  <h1>Theme — <span class="name" id="appNameHero">[AppName]</span></h1>
+  <p id="modeStatus">Light mode · Purple</p>
+</div>
+
+<div class="canvas" id="canvas">
+  <div class="stack">
+    <div id="phone-settings"></div>
+    <div class="stack-label">Settings</div>
+    <div class="stack-sub">Pick mode + accent</div>
+  </div>
+</div>
+
+<div id="tweaks-root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="theme-screens.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "appName": "StudyAI",
+    "appearance": "light",
+    "accent": "magenta"
+  }/*EDITMODE-END*/;
+
+  function resolveDark(appearance) {
+    if (appearance === 'auto') {
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return appearance === 'dark';
+  }
+
+  function App() {
+    const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+    const dark = resolveDark(t.appearance);
+    const accentDef = ACCENTS.find((a) => a.id === t.accent) || ACCENTS[10];
+    const accent = accentDef.hex;
+
+    React.useEffect(() => {
+      document.body.classList.toggle('is-dark', dark);
+      document.documentElement.style.setProperty('--accent', accent);
+      const hero = document.getElementById('appNameHero');
+      if (hero) hero.textContent = t.appName;
+      const status = document.getElementById('modeStatus');
+      if (status) {
+        const modeLabel = t.appearance === 'auto' ? `Auto (${dark ? 'dark' : 'light'})` : (dark ? 'Dark mode' : 'Light mode');
+        status.textContent = `${modeLabel} · ${accentDef.name}`;
+      }
+    }, [dark, accent, t.appName, t.appearance]);
+
+    const settingsScreen = (
+      <SettingsScreen
+        dark={dark}
+        accent={accent}
+        appearance={t.appearance}
+        setAppearance={(v) => setTweak('appearance', v)}
+        accentId={t.accent}
+        setAccentId={(v) => setTweak('accent', v)}
+        appName={t.appName}
+      />
+    );
+
+    // Mount the settings screen into its phone container via portal
+    const settingsRoot = document.getElementById('phone-settings');
+
+    return (
+      <>
+        {settingsRoot && ReactDOM.createPortal(
+          <IOSDevice dark={dark} width={390} height={844}>{settingsScreen}</IOSDevice>,
+          settingsRoot
+        )}
+
+        <TweaksPanel title="Theme">
+          <TweakSection label="App">
+            <TweakText label="App name" value={t.appName}
+                       placeholder="Mneme"
+                       onChange={(v) => setTweak('appName', v)} />
+          </TweakSection>
+
+          <TweakSection label="Appearance">
+            <TweakRadio label="Mode"
+                        value={t.appearance}
+                        options={['light', 'dark', 'auto']}
+                        onChange={(v) => setTweak('appearance', v)} />
+          </TweakSection>
+
+          <TweakSection label="Accent">
+            <TweakSelect label="Color"
+                         value={t.accent}
+                         options={ACCENTS.map((a) => ({ value: a.id, label: a.name }))}
+                         onChange={(v) => setTweak('accent', v)} />
+            <TweakColor label="Swatch"
+                        value={accent}
+                        options={ACCENTS.map((a) => a.hex)}
+                        onChange={(hex) => {
+                          const m = ACCENTS.find((a) => a.hex.toLowerCase() === hex.toLowerCase());
+                          if (m) setTweak('accent', m.id);
+                        }} />
+          </TweakSection>
+        </TweaksPanel>
+      </>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<App />);
+</script>
+
+</body>
+</html>

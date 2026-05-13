@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Navigation — iPad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: "IBM Plex Sans", -apple-system, system-ui, sans-serif;
+    background: #efe9dc;
+    background-image:
+      radial-gradient(1200px 700px at 80% -10%, #f4ecd8 0%, transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, #e8dec5 0%, transparent 55%);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body.is-dark {
+    background: #14130f;
+    background-image:
+      radial-gradient(1200px 700px at 80% -10%, #1d1c18 0%, transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, #1a1815 0%, transparent 55%);
+  }
+
+  .heading {
+    text-align: center;
+    padding: 32px 24px 8px;
+  }
+  .heading h1 {
+    margin: 0;
+    font-family: "Instrument Serif", serif;
+    font-weight: 400; font-size: 32px;
+    color: #1f1b16; letter-spacing: -0.005em;
+    transition: color 240ms ease;
+  }
+  body.is-dark .heading h1 { color: #f4f1ea; }
+  .heading h1 .name { font-style: italic; color: var(--accent, #F4A6BB); }
+  .heading p {
+    margin: 8px 0 0;
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(31, 27, 22, 0.45);
+  }
+  body.is-dark .heading p { color: rgba(244, 241, 234, 0.4); }
+
+  .stage {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 56px;
+    padding: 32px 24px 80px;
+  }
+
+  /* Scale wrapper — keeps native pixel sizes inside but fits the viewport down.
+     Uses transform-origin: top left so we can also constrain the layout box
+     to the *scaled* size (transforms alone don't shrink layout). */
+  .scaler {
+    transform-origin: top left;
+    transition: transform 200ms ease;
+  }
+</style>
+</head>
+<body>
+
+<div class="heading">
+  <h1>Navigation iPad — <span class="name" id="appNameHero">StudyAI</span></h1>
+  <p>Sidebar collapses to icons on narrow widths</p>
+</div>
+
+<div class="stage">
+  <div class="scaler" id="ipad-wide-scaler">
+    <div id="ipad-wide"></div>
+  </div>
+  <div class="scaler" id="ipad-narrow-scaler">
+    <div id="ipad-narrow"></div>
+  </div>
+</div>
+
+<div id="tweaks-root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="theme-screens.jsx"></script>
+<script type="text/babel" src="nav-shell.jsx"></script>
+<script type="text/babel" src="nav-shell-ipad.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+  // Breakpoint at which the sidebar collapses to icons-only (in iPad screen px).
+  const COLLAPSE_BREAKPOINT = 900;
+
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "appName": "StudyAI",
+    "appearance": "light",
+    "accent": "pink",
+    "showCollapsed": true
+  }/*EDITMODE-END*/;
+
+  function resolveDark(appearance) {
+    if (appearance === 'auto') {
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return appearance === 'dark';
+  }
+
+  // Fit a given pixel-width frame into the available viewport width.
+  function useFitScale(targetWidth) {
+    const [scale, setScale] = React.useState(1);
+    React.useEffect(() => {
+      function fit() {
+        const avail = Math.min(window.innerWidth - 80, 1400);
+        const s = Math.min(1, avail / targetWidth);
+        setScale(s);
+      }
+      fit();
+      window.addEventListener('resize', fit);
+      return () => window.removeEventListener('resize', fit);
+    }, [targetWidth]);
+    return scale;
+  }
+
+  function App() {
+    const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+    const dark = resolveDark(t.appearance);
+    const accentDef = ACCENTS.find((a) => a.id === t.accent) || ACCENTS.find((a) => a.id === 'blue');
+    const accent = accentDef.hex;
+
+    React.useEffect(() => {
+      document.body.classList.toggle('is-dark', dark);
+      document.documentElement.style.setProperty('--accent', accent);
+      const hero = document.getElementById('appNameHero');
+      if (hero) hero.textContent = t.appName;
+    }, [dark, accent, t.appName]);
+
+    // Wide iPad: 1194×834 (iPad Pro 11" landscape)
+    const WIDE_W = 1194, WIDE_H = 834;
+    // Narrow iPad: 744×1024 (iPad mini portrait)
+    const NARROW_W = 744, NARROW_H = 1024;
+
+    const wideScale = useFitScale(WIDE_W + 28); // +28 for bezel
+    const narrowScale = useFitScale(NARROW_W + 28);
+
+    React.useEffect(() => {
+      const ws = document.getElementById('ipad-wide-scaler');
+      const ns = document.getElementById('ipad-narrow-scaler');
+      // Constrain BOTH width and height to scaled dimensions so the layout box
+      // matches the visible size (transforms don't change layout).
+      if (ws) {
+        ws.style.transform = `scale(${wideScale})`;
+        ws.style.width  = `${(WIDE_W + 28) * wideScale}px`;
+        ws.style.height = `${(WIDE_H + 28 + 50) * wideScale}px`;
+      }
+      if (ns) {
+        ns.style.transform = `scale(${narrowScale})`;
+        ns.style.width  = `${(NARROW_W + 28) * narrowScale}px`;
+        ns.style.height = `${(NARROW_H + 28 + 50) * narrowScale}px`;
+      }
+    }, [wideScale, narrowScale]);
+
+    const wideRoot = document.getElementById('ipad-wide');
+    const narrowRoot = document.getElementById('ipad-narrow');
+
+    // Tweak: lets you force-collapse the wide iPad too (for comparison)
+    const wideCollapsed = WIDE_W < COLLAPSE_BREAKPOINT;
+    const narrowCollapsed = t.showCollapsed ? NARROW_W < COLLAPSE_BREAKPOINT : false;
+
+    return (
+      <>
+        {wideRoot && ReactDOM.createPortal(
+          <IPadFrame width={WIDE_W} height={WIDE_H} dark={dark} label={`Wide · ${WIDE_W}pt — sidebar expanded`}>
+            <IPadNavShell dark={dark} accent={accent} appName={t.appName} collapsed={wideCollapsed} />
+          </IPadFrame>,
+          wideRoot
+        )}
+        {narrowRoot && ReactDOM.createPortal(
+          <IPadFrame width={NARROW_W} height={NARROW_H} dark={dark} label={`Narrow · ${NARROW_W}pt — sidebar collapsed to icons`}>
+            <IPadNavShell dark={dark} accent={accent} appName={t.appName} collapsed={narrowCollapsed} />
+          </IPadFrame>,
+          narrowRoot
+        )}
+
+        <TweaksPanel title="Tweaks">
+          <TweakSection label="App">
+            <TweakText label="App name" value={t.appName}
+                       placeholder="StudyAI"
+                       onChange={(v) => setTweak('appName', v)} />
+          </TweakSection>
+
+          <TweakSection label="Appearance">
+            <TweakRadio label="Mode"
+                        value={t.appearance}
+                        options={['light', 'dark', 'auto']}
+                        onChange={(v) => setTweak('appearance', v)} />
+          </TweakSection>
+
+          <TweakSection label="Sidebar">
+            <TweakToggle label="Auto-collapse on narrow"
+                         value={t.showCollapsed}
+                         onChange={(v) => setTweak('showCollapsed', v)} />
+          </TweakSection>
+
+          <TweakSection label="Accent">
+            <TweakSelect label="Color"
+                         value={t.accent}
+                         options={ACCENTS.map((a) => ({ value: a.id, label: a.name }))}
+                         onChange={(v) => setTweak('accent', v)} />
+            <TweakColor label="Swatch"
+                        value={accent}
+                        options={ACCENTS.map((a) => a.hex)}
+                        onChange={(hex) => {
+                          const m = ACCENTS.find((a) => a.hex.toLowerCase() === hex.toLowerCase());
+                          if (m) setTweak('accent', m.id);
+                        }} />
+          </TweakSection>
+        </TweaksPanel>
+      </>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<App />);
+</script>
+
+</body>
+</html>

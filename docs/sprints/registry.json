@@ -1,0 +1,462 @@
+{
+  "counters": {
+    "next_sprint": 34,
+    "next_epic": 13
+  },
+  "sprints": {
+    "1": {
+      "title": "Project scaffolding",
+      "status": "planning",
+      "epic": 1,
+      "type": "infrastructure",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "2": {
+      "title": "Theme and accent system",
+      "status": "planning",
+      "epic": 1,
+      "type": "frontend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "3": {
+      "title": "Navigation shell",
+      "status": "planning",
+      "epic": 1,
+      "type": "frontend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "4": {
+      "title": "Data models and local JSON store",
+      "status": "planning",
+      "epic": 2,
+      "type": "backend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "5": {
+      "title": "Image storage and auto-rename",
+      "status": "planning",
+      "epic": 2,
+      "type": "backend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "6": {
+      "title": "Decks home view",
+      "status": "planning",
+      "epic": 2,
+      "type": "frontend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "7": {
+      "title": "Deck CRUD flows",
+      "status": "planning",
+      "epic": 2,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "8": {
+      "title": "Flashcard editor",
+      "status": "planning",
+      "epic": 3,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "9": {
+      "title": "Flashcard flip view and animation",
+      "status": "planning",
+      "epic": 3,
+      "type": "frontend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "10": {
+      "title": "Study session navigation",
+      "status": "planning",
+      "epic": 3,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "11": {
+      "title": "Both-sides view and image popup",
+      "status": "planning",
+      "epic": 3,
+      "type": "frontend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "12": {
+      "title": "Notepad data model and storage",
+      "status": "planning",
+      "epic": 4,
+      "type": "backend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "13": {
+      "title": "Notepad modal UI",
+      "status": "planning",
+      "epic": 4,
+      "type": "frontend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "14": {
+      "title": "Voice-to-text and Notes tab",
+      "status": "planning",
+      "epic": 4,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "15": {
+      "title": "Settings - Theme and accent",
+      "status": "planning",
+      "epic": 5,
+      "type": "frontend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "16": {
+      "title": "Settings - Full customization",
+      "status": "planning",
+      "epic": 5,
+      "type": "frontend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "17": {
+      "title": "Profile tab and personal streak",
+      "status": "planning",
+      "epic": 6,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "18": {
+      "title": "Server proxy infrastructure",
+      "status": "planning",
+      "epic": 7,
+      "type": "backend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "19": {
+      "title": "Multi-provider AI integrations",
+      "status": "planning",
+      "epic": 7,
+      "type": "backend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "20": {
+      "title": "Token cost calculation",
+      "status": "planning",
+      "epic": 7,
+      "type": "backend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "21": {
+      "title": "AI Chat tab and conversation UI",
+      "status": "planning",
+      "epic": 8,
+      "type": "frontend",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "22": {
+      "title": "Token shop IAP",
+      "status": "planning",
+      "epic": 8,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "23": {
+      "title": "Deck-grounded RAG mode",
+      "status": "planning",
+      "epic": 8,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "24": {
+      "title": "App Store assets",
+      "status": "planning",
+      "epic": 9,
+      "type": "infrastructure",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "25": {
+      "title": "TestFlight beta and submission",
+      "status": "planning",
+      "epic": 9,
+      "type": "infrastructure",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "26": {
+      "title": "Sign in with Apple and email auth",
+      "status": "planning",
+      "epic": 10,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "27": {
+      "title": "Supabase schema and sync engine",
+      "status": "planning",
+      "epic": 10,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "28": {
+      "title": "Subscription IAP and tier gating",
+      "status": "planning",
+      "epic": 10,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "29": {
+      "title": "Username and friend requests",
+      "status": "planning",
+      "epic": 11,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "30": {
+      "title": "Messages tab and deck share-request",
+      "status": "planning",
+      "epic": 11,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "31": {
+      "title": "Likes and friend streaks",
+      "status": "planning",
+      "epic": 11,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "32": {
+      "title": "Token gifting",
+      "status": "planning",
+      "epic": 11,
+      "type": "fullstack",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    },
+    "33": {
+      "title": "v2.0 App Store submission",
+      "status": "planning",
+      "epic": 12,
+      "type": "infrastructure",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "hours": null
+    }
+  },
+  "epics": {
+    "1": {
+      "title": "Foundation",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 3,
+      "completedSprints": 0,
+      "estimatedHours": 18.0
+    },
+    "2": {
+      "title": "Decks Foundation",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 4,
+      "completedSprints": 0,
+      "estimatedHours": 32.0
+    },
+    "3": {
+      "title": "Flashcard Editor and Study",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 4,
+      "completedSprints": 0,
+      "estimatedHours": 36.0
+    },
+    "4": {
+      "title": "Notepads",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 3,
+      "completedSprints": 0,
+      "estimatedHours": 24.0
+    },
+    "5": {
+      "title": "Settings and Customization",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 2,
+      "completedSprints": 0,
+      "estimatedHours": 16.0
+    },
+    "6": {
+      "title": "Profile and Streaks",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 1,
+      "completedSprints": 0,
+      "estimatedHours": 8.0
+    },
+    "7": {
+      "title": "AI Backend and Proxy",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 3,
+      "completedSprints": 0,
+      "estimatedHours": 30.0
+    },
+    "8": {
+      "title": "AI Chat UI",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 3,
+      "completedSprints": 0,
+      "estimatedHours": 24.0
+    },
+    "9": {
+      "title": "v1.0 App Store Launch",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 2,
+      "completedSprints": 0,
+      "estimatedHours": 16.0
+    },
+    "10": {
+      "title": "Online Auth and Sync",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 3,
+      "completedSprints": 0,
+      "estimatedHours": 30.0
+    },
+    "11": {
+      "title": "Online Social",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 4,
+      "completedSprints": 0,
+      "estimatedHours": 40.0
+    },
+    "12": {
+      "title": "v2.0 App Store Launch",
+      "status": "planning",
+      "created": "2026-05-11",
+      "started": null,
+      "completed": null,
+      "totalSprints": 1,
+      "completedSprints": 0,
+      "estimatedHours": 8.0
+    }
+  },
+  "nextEpicNumber": 13,
+  "nextSprintNumber": 34
+}

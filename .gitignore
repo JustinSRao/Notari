@@ -1,0 +1,46 @@
+# Xcode build artifacts
+build/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Generated project files (we regenerate via XcodeGen)
+*.pbxproj
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved
+.packages/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*~
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Fonts (fetched via scripts/fetch_fonts.{sh,ps1})
+Sources/Notari/Resources/Fonts/*.ttf
+Sources/Notari/Resources/Fonts/*.otf
+
+# Sprint workflow state files (per-machine)
+.claude/sprint-*-state.json
+.claude/product-state.json
+.claude/settings.local.json
+.claude/*_quality-assessment.json
+
+# Local secrets (none yet, but reserved)
+.env
+.env.local
+secrets.json

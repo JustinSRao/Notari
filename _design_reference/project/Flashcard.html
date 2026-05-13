@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flashcard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    background: #efe9dc;
+    background-image:
+      radial-gradient(1200px 700px at 80% -10%, #f4ecd8 0%, transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, #e8dec5 0%, transparent 55%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .stage {
+    perspective: 2200px;
+    width: var(--card-w, 560px);
+    height: var(--card-h, 360px);
+    transition: width 280ms cubic-bezier(.2,.7,.2,1), height 280ms cubic-bezier(.2,.7,.2,1);
+  }
+
+  .card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform var(--flip-speed, 720ms) cubic-bezier(.78,.02,.23,1);
+    cursor: pointer;
+    will-change: transform;
+    outline: none;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .card:not(.flipping):hover { transform: translateY(-3px); }
+  .card.flipped:not(.flipping):hover { transform: rotateY(180deg) translateY(-3px); }
+  .card.pressing { transform: scale(0.992); transition: transform 90ms ease; }
+  .card.flipped.pressing { transform: rotateY(180deg) scale(0.992); }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    background: var(--card-bg, #fbf7ed);
+    color: var(--card-fg, #1f1b16);
+    border: 1px solid var(--card-border, rgba(0,0,0,0.08));
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    padding: 36px 44px;
+    display: flex;
+    flex-direction: column;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.5) inset,
+      0 24px 50px -22px rgba(40, 30, 15, 0.28),
+      0 6px 14px -6px rgba(40, 30, 15, 0.12);
+    overflow: hidden;
+  }
+  .face::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.4;
+    mix-blend-mode: multiply;
+  }
+
+  .back {
+    background: var(--card-back-bg, var(--card-bg, #fbf7ed));
+    transform: rotateY(180deg);
+  }
+
+  .face-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--card-fg, #1f1b16);
+    opacity: 0.45;
+    font-weight: 500;
+  }
+  .face-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 12px 8px;
+  }
+  .face-text {
+    font-family: "Instrument Serif", serif;
+    font-size: var(--text-size, 56px);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    white-space: pre-wrap;
+    transition: font-size 280ms cubic-bezier(.2,.7,.2,1);
+  }
+  .back .face-text {
+    font-size: calc(var(--text-size, 56px) * 0.62);
+    line-height: 1.32;
+  }
+
+  /* ─── Notepad icon (corner of card) ─── */
+  .note-btn {
+    position: absolute;
+    /* position controlled by --note-pos-{top,right,bottom,left} */
+    top: var(--note-pos-top, auto);
+    right: var(--note-pos-right, 14px);
+    bottom: var(--note-pos-bottom, 14px);
+    left: var(--note-pos-left, auto);
+    width: var(--note-icon-size, 22px);
+    height: var(--note-icon-size, 22px);
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: var(--card-fg, #1f1b16);
+    opacity: 0.45;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    transition: opacity 160ms ease, transform 160ms ease, background 160ms ease;
+    z-index: 3;
+    backface-visibility: hidden;
+  }
+  .note-btn:hover { opacity: 0.95; background: rgba(0,0,0,0.05); transform: scale(1.06); }
+  .note-btn:active { transform: scale(0.94); }
+  .note-btn svg { width: 100%; height: 100%; display: block; }
+  /* Mirror the icon on the back face so it reads correctly when flipped */
+  .back .note-btn { transform: scaleX(-1); }
+  .back .note-btn:hover { transform: scaleX(-1) scale(1.06); }
+  .back .note-btn:active { transform: scaleX(-1) scale(0.94); }
+
+  /* ─── Notepad modal ─── */
+  .note-scrim {
+    position: fixed; inset: 0;
+    background: rgba(28, 22, 12, 0.42);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 32px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+  }
+  .note-scrim.open { opacity: 1; pointer-events: auto; }
+
+  .notepad {
+    --pad-line: #b8d4ec;
+    --pad-paper: #ffffff;
+    --pad-ink: #1c1a17;
+    width: min(640px, 100%);
+    height: min(560px, 100%);
+    background: var(--pad-paper);
+    border-radius: 6px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 30px 80px -20px rgba(20, 14, 4, 0.45),
+      0 10px 24px -10px rgba(20, 14, 4, 0.25);
+    color: var(--pad-ink);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    transform-origin: center;
+  }
+  /* Animation variants */
+  .anim-pop  .notepad { transform: scale(0.92); opacity: 0; transition: transform 240ms cubic-bezier(.2,.9,.25,1.15), opacity 220ms ease; }
+  .anim-pop.open .notepad { transform: scale(1); opacity: 1; }
+  .anim-rise .notepad { transform: translateY(28px); opacity: 0; transition: transform 280ms cubic-bezier(.2,.7,.2,1), opacity 240ms ease; }
+  .anim-rise.open .notepad { transform: translateY(0); opacity: 1; }
+  .anim-fade .notepad { opacity: 0; transition: opacity 220ms ease; }
+  .anim-fade.open .notepad { opacity: 1; }
+  .anim-flip .notepad { transform: perspective(1200px) rotateX(-22deg); opacity: 0; transition: transform 320ms cubic-bezier(.2,.7,.2,1), opacity 260ms ease; }
+  .anim-flip.open .notepad { transform: perspective(1200px) rotateX(0deg); opacity: 1; }
+
+  .notepad-head {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+    background: linear-gradient(to bottom, rgba(0,0,0,0.015), transparent);
+  }
+  .notepad-meta { flex: 1; min-width: 0; }
+  .notepad-tag {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(0,0,0,0.45); font-weight: 500;
+  }
+  .notepad-term {
+    font-family: "Instrument Serif", serif;
+    font-size: 22px; line-height: 1.1;
+    color: var(--pad-ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  .notepad-close {
+    appearance: none; border: 0; background: transparent;
+    width: 30px; height: 30px; border-radius: 8px;
+    cursor: pointer; color: rgba(0,0,0,0.55);
+    display: grid; place-items: center; flex-shrink: 0;
+    transition: background 140ms ease, color 140ms ease;
+  }
+  .notepad-close:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.85); }
+  .notepad-close svg { width: 16px; height: 16px; }
+
+  .notepad-title {
+    appearance: none; border: 0; outline: 0; background: transparent;
+    font-family: "Instrument Serif", serif;
+    font-size: 28px; line-height: 1.15; letter-spacing: -0.005em;
+    color: var(--pad-ink);
+    padding: 14px 28px 6px;
+    width: 100%;
+  }
+  .notepad-title::placeholder { color: rgba(0,0,0,0.28); font-style: italic; }
+
+  .notepad-toolbar {
+    display: flex; align-items: center; gap: 4px;
+    padding: 6px 24px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .tb-btn {
+    appearance: none; border: 0; background: transparent;
+    height: 28px; min-width: 28px; padding: 0 6px;
+    border-radius: 6px;
+    color: rgba(0,0,0,0.65);
+    cursor: pointer;
+    font: 500 12px/1 ui-sans-serif, system-ui, sans-serif;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background 120ms ease, color 120ms ease;
+  }
+  .tb-btn:hover { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.9); }
+  .tb-btn.is-active { background: rgba(0,0,0,0.09); color: rgba(0,0,0,0.95); }
+  .tb-btn svg { width: 14px; height: 14px; }
+  .tb-sep { width: 1px; height: 16px; background: rgba(0,0,0,0.1); margin: 0 6px; }
+  .tb-btn .tb-i { font-style: italic; font-family: "Instrument Serif", serif; font-size: 16px; }
+  .tb-btn .tb-b { font-weight: 700; font-size: 13px; }
+
+  .notepad-body {
+    flex: 1;
+    overflow: auto;
+    padding: 14px 28px 24px;
+    /* Ruled lines */
+    background-image: linear-gradient(to bottom, transparent calc(var(--pad-line-h, 28px) - 1px), var(--pad-line) calc(var(--pad-line-h, 28px) - 1px), var(--pad-line) var(--pad-line-h, 28px), transparent var(--pad-line-h, 28px));
+    background-size: 100% var(--pad-line-h, 28px);
+    /* Push the rules below each text baseline so letters sit above the line */
+    background-position: 0 12px;
+  }
+  .notepad-body[contenteditable="true"] {
+    outline: none;
+    font: 400 16px/var(--pad-line-h, 28px) "IBM Plex Sans", system-ui, sans-serif;
+    color: var(--pad-ink);
+    min-height: 100%;
+    caret-color: var(--pad-line);
+  }
+  .notepad-body:empty::before {
+    content: attr(data-placeholder);
+    color: rgba(0,0,0,0.3);
+    font-style: italic;
+    pointer-events: none;
+  }
+  .notepad-body ul, .notepad-body ol { margin: 0; padding-left: 24px; }
+  .notepad-body li { margin: 0; }
+  .notepad-body ul[data-checklist] { list-style: none; padding-left: 4px; }
+  .notepad-body ul[data-checklist] li {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding-left: 0;
+  }
+  .notepad-body ul[data-checklist] li::before {
+    content: ""; flex-shrink: 0;
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--pad-line);
+    border-radius: 4px;
+    margin-top: 5px;
+    background: transparent;
+  }
+
+  .notepad-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 24px 10px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    font-size: 11px;
+    color: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.012);
+  }
+  .notepad-foot .ft-r { display: flex; gap: 14px; align-items: center; }
+  .notepad-foot b { color: rgba(0,0,0,0.7); font-weight: 500; }
+
+  /* Dark-paper variant — invert subtle borders + scrollbar */
+  .notepad.is-dark .notepad-head,
+  .notepad.is-dark .notepad-toolbar,
+  .notepad.is-dark .notepad-foot { border-color: rgba(255,255,255,0.08); background: transparent; }
+  .notepad.is-dark .notepad-tag { color: rgba(255,255,255,0.45); }
+  .notepad.is-dark .notepad-close { color: rgba(255,255,255,0.6); }
+  .notepad.is-dark .notepad-close:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .notepad.is-dark .tb-btn { color: rgba(255,255,255,0.65); }
+  .notepad.is-dark .tb-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .notepad.is-dark .tb-btn.is-active { background: rgba(255,255,255,0.12); color: #fff; }
+  .notepad.is-dark .tb-sep { background: rgba(255,255,255,0.12); }
+  .notepad.is-dark .notepad-foot { color: rgba(255,255,255,0.5); }
+  .notepad.is-dark .notepad-foot b { color: rgba(255,255,255,0.85); }
+  .notepad.is-dark .notepad-title::placeholder { color: rgba(255,255,255,0.32); }
+  .notepad.is-dark .notepad-body:empty::before { color: rgba(255,255,255,0.32); }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <div class="card" id="card" tabindex="0" role="button" aria-pressed="false"
+       aria-label="Flashcard. Press space or click to flip.">
+    <div class="face front">
+      <div class="face-label">Front</div>
+      <div class="face-body"><div class="face-text" id="frontText">Ephemeral</div></div>
+      <button class="note-btn" type="button" aria-label="Open notes" data-note-trigger>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15.5 3.5H5A1.5 1.5 0 0 0 3.5 5v14A1.5 1.5 0 0 0 5 20.5h13a1.5 1.5 0 0 0 1.5-1.5v-3.5"></path>
+          <path d="M6.5 8.5h7"></path>
+          <path d="M6.5 12h6"></path>
+          <path d="M6.5 15.5h5.5"></path>
+          <path d="M19 4l2 2"></path>
+          <path d="M18.4 4.6l2 2-7.5 7.5-2.4.4.4-2.4z"></path>
+          <path d="M11.4 11.6l2 2"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="face back">
+      <div class="face-label">Back</div>
+      <div class="face-body"><div class="face-text" id="backText">Lasting for a very short time; fleeting, transient.</div></div>
+      <button class="note-btn" type="button" aria-label="Open notes" data-note-trigger>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15.5 3.5H5A1.5 1.5 0 0 0 3.5 5v14A1.5 1.5 0 0 0 5 20.5h13a1.5 1.5 0 0 0 1.5-1.5v-3.5"></path>
+          <path d="M6.5 8.5h7"></path>
+          <path d="M6.5 12h6"></path>
+          <path d="M6.5 15.5h5.5"></path>
+          <path d="M19 4l2 2"></path>
+          <path d="M18.4 4.6l2 2-7.5 7.5-2.4.4.4-2.4z"></path>
+          <path d="M11.4 11.6l2 2"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Notepad modal -->
+<div class="note-scrim anim-pop" id="noteScrim" role="dialog" aria-modal="true" aria-labelledby="notepadTermLabel" hidden>
+  <div class="notepad" role="document">
+    <div class="notepad-head">
+      <div class="notepad-meta">
+        <div class="notepad-tag">Notes for</div>
+        <div class="notepad-term" id="notepadTermLabel">Ephemeral</div>
+      </div>
+      <button class="notepad-close" type="button" aria-label="Close notes" id="noteClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+    <input class="notepad-title" id="noteTitle" type="text" placeholder="Title…" autocomplete="off" />
+    <div class="notepad-toolbar" role="toolbar" aria-label="Formatting">
+      <button class="tb-btn" type="button" data-cmd="bold" title="Bold (Ctrl/Cmd+B)"><span class="tb-b">B</span></button>
+      <button class="tb-btn" type="button" data-cmd="italic" title="Italic (Ctrl/Cmd+I)"><span class="tb-i">I</span></button>
+      <button class="tb-btn" type="button" data-cmd="underline" title="Underline"><span style="text-decoration:underline;font-size:13px;font-weight:500;">U</span></button>
+      <span class="tb-sep"></span>
+      <button class="tb-btn" type="button" data-cmd="insertUnorderedList" title="Bulleted list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="7" r="1.2" fill="currentColor"/><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="5" cy="17" r="1.2" fill="currentColor"/><path d="M9 7h11M9 12h11M9 17h11"/></svg>
+      </button>
+      <button class="tb-btn" type="button" data-cmd="insertOrderedList" title="Numbered list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 7h11M9 12h11M9 17h11M4 5v4M3 9h2"/></svg>
+      </button>
+      <button class="tb-btn" type="button" data-cmd="checklist" title="Checklist">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="6" height="6" rx="1.2"/><path d="M5 7.5l1.4 1.4L8.5 6.5"/><rect x="3.5" y="13.5" width="6" height="6" rx="1.2"/><path d="M12 7.5h9M12 16.5h9"/></svg>
+      </button>
+    </div>
+    <div class="notepad-body" id="noteBody" contenteditable="true" data-placeholder="Start writing your notes…" spellcheck="true"></div>
+    <div class="notepad-foot">
+      <span>Last edited <b id="noteEdited">just now</b></span>
+      <div class="ft-r">
+        <span><b id="noteCount">0</b> chars</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tweaks-root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script>
+  // Bare flip behaviour — independent of the React tweaks panel
+  const card = document.getElementById('card');
+  let isFlipped = false;
+  let isAnimating = false;
+  let isLocked = false;
+
+  function getFlipMs() {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--flip-speed').trim();
+    if (v.endsWith('ms')) return parseFloat(v);
+    if (v.endsWith('s')) return parseFloat(v) * 1000;
+    return 720;
+  }
+
+  function flip() {
+    if (isAnimating || isLocked) return;
+    isAnimating = true;
+    isFlipped = !isFlipped;
+    card.classList.add('flipping');
+    card.classList.toggle('flipped', isFlipped);
+    card.setAttribute('aria-pressed', isFlipped ? 'true' : 'false');
+    setTimeout(() => {
+      card.classList.remove('flipping');
+      isAnimating = false;
+    }, getFlipMs());
+  }
+
+  card.addEventListener('click', (e) => {
+    // Ignore clicks that originate on the note button (or any control marked
+    // data-note-trigger) so the card doesn't flip when opening notes.
+    if (e.target.closest('[data-note-trigger]')) return;
+    flip();
+  });
+  card.addEventListener('mousedown', (e) => {
+    if (e.target.closest('[data-note-trigger]')) return;
+    card.classList.add('pressing');
+  });
+  card.addEventListener('mouseup', () => card.classList.remove('pressing'));
+  card.addEventListener('mouseleave', () => card.classList.remove('pressing'));
+
+  document.addEventListener('keydown', (e) => {
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    if (isLocked) return;
+    if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); flip(); }
+  });
+
+  // ─── Notepad modal wiring ──────────────────────────────────────────────
+  const scrim = document.getElementById('noteScrim');
+  const noteClose = document.getElementById('noteClose');
+  const noteBody = document.getElementById('noteBody');
+  const noteTitle = document.getElementById('noteTitle');
+  const noteCount = document.getElementById('noteCount');
+  const noteEdited = document.getElementById('noteEdited');
+  const notepadTermLabel = document.getElementById('notepadTermLabel');
+
+  let editedTime = null;
+  let editedTimer = null;
+
+  function fmtRelative(d) {
+    if (!d) return 'just now';
+    const s = Math.max(0, Math.round((Date.now() - d) / 1000));
+    if (s < 5) return 'just now';
+    if (s < 60) return s + 's ago';
+    const m = Math.round(s / 60);
+    if (m < 60) return m + 'm ago';
+    const h = Math.round(m / 60);
+    if (h < 24) return h + 'h ago';
+    return d.toLocaleDateString();
+  }
+
+  function refreshEdited() {
+    noteEdited.textContent = fmtRelative(editedTime);
+  }
+
+  function refreshCount() {
+    const text = (noteTitle.value || '') + ' ' + (noteBody.innerText || '');
+    noteCount.textContent = text.trim().length;
+  }
+
+  function markEdited() {
+    editedTime = new Date();
+    refreshEdited();
+  }
+
+  function openNotepad() {
+    notepadTermLabel.textContent = document.getElementById('frontText').textContent || 'Flashcard';
+    scrim.hidden = false;
+    // Force reflow so the .open transition fires
+    void scrim.offsetWidth;
+    scrim.classList.add('open');
+    isLocked = true;
+    refreshCount();
+    refreshEdited();
+    if (!editedTimer) editedTimer = setInterval(refreshEdited, 30000);
+    setTimeout(() => {
+      // Focus into title if empty, else body
+      if (!noteTitle.value) noteTitle.focus();
+      else noteBody.focus();
+    }, 220);
+  }
+
+  function closeNotepad() {
+    scrim.classList.remove('open');
+    isLocked = false;
+    setTimeout(() => { scrim.hidden = true; }, 260);
+  }
+
+  document.querySelectorAll('[data-note-trigger]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openNotepad();
+    });
+    btn.addEventListener('mousedown', (e) => e.stopPropagation());
+  });
+
+  noteClose.addEventListener('click', closeNotepad);
+  scrim.addEventListener('click', (e) => {
+    if (e.target === scrim) closeNotepad();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!scrim.classList.contains('open')) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeNotepad(); }
+  });
+
+  // Toolbar — formatting commands
+  document.querySelectorAll('.tb-btn').forEach((b) => {
+    b.addEventListener('mousedown', (e) => e.preventDefault()); // keep selection
+    b.addEventListener('click', () => {
+      const cmd = b.dataset.cmd;
+      noteBody.focus();
+      if (cmd === 'checklist') {
+        // Toggle a checklist by inserting a UL with data-checklist
+        document.execCommand('insertUnorderedList');
+        // Find the nearest UL and tag it
+        const sel = window.getSelection();
+        if (sel && sel.anchorNode) {
+          let n = sel.anchorNode;
+          while (n && n !== noteBody) {
+            if (n.nodeType === 1 && n.tagName === 'UL') {
+              if (n.hasAttribute('data-checklist')) n.removeAttribute('data-checklist');
+              else n.setAttribute('data-checklist', '');
+              break;
+            }
+            n = n.parentNode;
+          }
+        }
+      } else {
+        document.execCommand(cmd);
+      }
+      markEdited();
+      refreshCount();
+      updateToolbarState();
+    });
+  });
+
+  function updateToolbarState() {
+    document.querySelectorAll('.tb-btn').forEach((b) => {
+      const cmd = b.dataset.cmd;
+      if (!cmd || cmd === 'checklist') return;
+      try {
+        b.classList.toggle('is-active', document.queryCommandState(cmd));
+      } catch (_) {}
+    });
+  }
+
+  noteBody.addEventListener('input', () => { markEdited(); refreshCount(); });
+  noteTitle.addEventListener('input', () => { markEdited(); refreshCount(); });
+  document.addEventListener('selectionchange', () => {
+    if (scrim.classList.contains('open')) updateToolbarState();
+  });
+
+  // Keyboard shortcuts inside the notepad
+  noteBody.addEventListener('keydown', (e) => {
+    const meta = e.metaKey || e.ctrlKey;
+    if (!meta) return;
+    if (e.key === 'b' || e.key === 'B') { e.preventDefault(); document.execCommand('bold'); markEdited(); updateToolbarState(); }
+    if (e.key === 'i' || e.key === 'I') { e.preventDefault(); document.execCommand('italic'); markEdited(); updateToolbarState(); }
+  });
+</script>
+
+<script type="text/babel" data-presets="env,react">
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "frontText": "Flashcard",
+    "backText": "Response is on the back",
+    "flipSpeed": 550,
+    "size": 0.7,
+    "palette": [
+      "#f1e8f6",
+      "#dec5ea",
+      "#3b1947"
+    ],
+    "noteIconSize": 31,
+    "noteIconCorner": "br",
+    "noteLineColor": "#b8d4ec",
+    "notePaper": "#ffffff",
+    "noteAnim": "pop"
+  }/*EDITMODE-END*/;
+
+  // Curated palettes: [front-bg, back-bg, ink/foreground]
+  const PALETTES = [
+    ["#fbf7ed", "#f0e9d6", "#1f1b16"], // paper
+    ["#1c1c1e", "#2a2a2d", "#f4f3ee"], // graphite
+    ["#fef3e8", "#fbdcc1", "#3a1d0d"], // terracotta
+    ["#e7efe6", "#cfe0ce", "#1f3a25"], // sage
+    ["#e6edf6", "#cdd9ec", "#0f2540"], // cobalt
+    ["#f1e8f6", "#dec5ea", "#3b1947"], // plum
+  ];
+
+  function isDarkColor(hex) {
+    const m = /^#?([a-f\d]{6}|[a-f\d]{3})$/i.exec(hex || '');
+    if (!m) return false;
+    let h = m[1];
+    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    // Perceived luminance
+    return (0.299 * r + 0.587 * g + 0.114 * b) < 128;
+  }
+
+  function applyTweaks(t) {
+    const root = document.documentElement.style;
+    const w = Math.round(560 * t.size);
+    const h = Math.round(360 * t.size);
+    root.setProperty('--card-w', w + 'px');
+    root.setProperty('--card-h', h + 'px');
+    root.setProperty('--text-size', Math.round(56 * t.size) + 'px');
+    // Flip speed
+    root.setProperty('--flip-speed', t.flipSpeed + 'ms');
+    // Color palette
+    const [front, back, fg] = t.palette;
+    root.setProperty('--card-bg', front);
+    root.setProperty('--card-back-bg', back);
+    root.setProperty('--card-fg', fg);
+    root.setProperty('--card-border', 'rgba(0,0,0,0.08)');
+    // Content
+    document.getElementById('frontText').textContent = t.frontText || ' ';
+    document.getElementById('backText').textContent = t.backText || ' ';
+
+    // ── Notepad icon size + corner position ──
+    root.setProperty('--note-icon-size', (t.noteIconSize || 22) + 'px');
+    const inset = Math.max(8, Math.round((t.noteIconSize || 22) * 0.55));
+    const corners = {
+      tl: { top: inset + 'px', right: 'auto', bottom: 'auto', left: inset + 'px' },
+      tr: { top: inset + 'px', right: inset + 'px', bottom: 'auto', left: 'auto' },
+      bl: { top: 'auto', right: 'auto', bottom: inset + 'px', left: inset + 'px' },
+      br: { top: 'auto', right: inset + 'px', bottom: inset + 'px', left: 'auto' },
+    };
+    const c = corners[t.noteIconCorner] || corners.br;
+    root.setProperty('--note-pos-top', c.top);
+    root.setProperty('--note-pos-right', c.right);
+    root.setProperty('--note-pos-bottom', c.bottom);
+    root.setProperty('--note-pos-left', c.left);
+
+    // ── Notepad theme ──
+    const pad = document.querySelector('.notepad');
+    if (pad) {
+      pad.style.setProperty('--pad-line', t.noteLineColor || '#b8d4ec');
+      pad.style.setProperty('--pad-paper', t.notePaper || '#ffffff');
+      // Auto-flip ink colour for dark paper
+      const isDark = isDarkColor(t.notePaper || '#ffffff');
+      pad.style.setProperty('--pad-ink', isDark ? '#f4f1ea' : '#1c1a17');
+      pad.classList.toggle('is-dark', isDark);
+    }
+    // Animation variant
+    const scrim = document.getElementById('noteScrim');
+    if (scrim) {
+      scrim.classList.remove('anim-pop', 'anim-rise', 'anim-fade', 'anim-flip');
+      scrim.classList.add('anim-' + (t.noteAnim || 'pop'));
+    }
+  }
+
+  function App() {
+    const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+    React.useEffect(() => { applyTweaks(t); }, [t]);
+
+    return (
+      <TweaksPanel title="Flashcard">
+        <TweakSection label="Content">
+          <TweakText label="Front"
+                     value={t.frontText}
+                     placeholder="Term"
+                     onChange={(v) => setTweak('frontText', v)} />
+          <TweakText label="Back"
+                     value={t.backText}
+                     placeholder="Definition"
+                     onChange={(v) => setTweak('backText', v)} />
+        </TweakSection>
+
+        <TweakSection label="Motion">
+          <TweakSlider label="Flip speed"
+                       value={t.flipSpeed}
+                       min={150} max={2000} step={10} unit="ms"
+                       onChange={(v) => setTweak('flipSpeed', v)} />
+        </TweakSection>
+
+        <TweakSection label="Size">
+          <TweakSlider label="Scale"
+                       value={t.size}
+                       min={0.5} max={1.6} step={0.05} unit="×"
+                       onChange={(v) => setTweak('size', v)} />
+        </TweakSection>
+
+        <TweakSection label="Color">
+          <TweakColor label="Palette"
+                      value={t.palette}
+                      options={PALETTES}
+                      onChange={(v) => setTweak('palette', v)} />
+        </TweakSection>
+
+        <TweakSection label="Notepad">
+          <TweakSlider label="Icon size"
+                       value={t.noteIconSize}
+                       min={8} max={64} step={1} unit="px"
+                       onChange={(v) => setTweak('noteIconSize', v)} />
+          <TweakSelect label="Icon corner"
+                       value={t.noteIconCorner}
+                       options={[
+                         { value: 'tl', label: 'Top left' },
+                         { value: 'tr', label: 'Top right' },
+                         { value: 'bl', label: 'Bottom left' },
+                         { value: 'br', label: 'Bottom right' },
+                       ]}
+                       onChange={(v) => setTweak('noteIconCorner', v)} />
+          <TweakColor label="Line color"
+                      value={t.noteLineColor}
+                      options={['#b8d4ec', '#f3c6c6', '#cfe5c8', '#f1d4a3', '#d8c8ee', '#cfcfd4']}
+                      onChange={(v) => setTweak('noteLineColor', v)} />
+          <TweakColor label="Paper"
+                      value={t.notePaper}
+                      options={['#ffffff', '#fbf7ed', '#f3efe5', '#1c1c1e']}
+                      onChange={(v) => setTweak('notePaper', v)} />
+          <TweakSelect label="Open animation"
+                       value={t.noteAnim}
+                       options={[
+                         { value: 'pop', label: 'Pop' },
+                         { value: 'rise', label: 'Rise' },
+                         { value: 'fade', label: 'Fade' },
+                         { value: 'flip', label: 'Flip' },
+                       ]}
+                       onChange={(v) => setTweak('noteAnim', v)} />
+        </TweakSection>
+      </TweaksPanel>
+    );
+  }
+
+  // Apply defaults immediately on load (before panel mounts) so the card
+  // reflects persisted values without a flash.
+  applyTweaks(TWEAK_DEFAULTS);
+
+  ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<App />);
+</script>
+
+</body>
+</html>
